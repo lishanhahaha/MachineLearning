@@ -5,6 +5,7 @@ import time
 import operator
 
 import numpy as np
+from sklearn.neighbors import KNeighborsClassifier as kNN
 
 
 TEST_DIGITS = r'F:\MLiA_SourceCode\machinelearninginaction\Ch02\digits\testDigits'
@@ -104,12 +105,39 @@ def handwriteClassTest():
     errorRatio = round(errorCount/numTestFile*100, 2)
     print('错误率：%s %%' % (errorRatio), errorCount, numTestFile, type(errorCount), type(numTestFile))
 
+def handwriteClassKNN():
+    trainFileList = os.listdir(TRAIN_DIGITS)
+    trainFileNum = len(trainFileList)
+    labels = []
+    trainDataSet = np.zeros((trainFileNum, 1024))
+    for i in range(trainFileNum):
+        lbl = trainFileList[i].split('_')
+        labels.append(int(lbl[0]))
+        trainDataSet[i,:] = file2matrix(TRAIN_DIGITS+os.sep+trainFileList[i])
+    # 运用kNN算法进行分类
+    testFileList = os.listdir(TEST_DIGITS)
+    testFileNum = len(testFileList)
+    neigh = kNN(n_neighbors=3, weights='uniform', algorithm='auto')
+    neigh.fit(trainDataSet, labels)
+    errorCount = 0
+    for i in range(testFileNum):
+        lbl = testFileList[i].split('_')
+        realResult = int(lbl[0])
+        testDataSet = file2matrix(TEST_DIGITS+os.sep+testFileList[i])
+        classResult = int(neigh.predict(testDataSet))
+        print('真实值：%s       预测值：%s' % (realResult, classResult))
+        if (realResult != classResult):
+            errorCount += 1
+    errorRatio = errorCount/testFileNum*100
+    print('错误率：%s %%' % (errorRatio))
+
 
 if __name__ == '__main__':
     startTime = time.time()
     '''dataSet, labels = createDataSetAndLabels()
     classResult = classifyKNN([1,0.1], dataSet, labels, 2)
     print(classResult)'''
-    handwriteClassTest()
+    #handwriteClassTest()
+    handwriteClassKNN()
     endTime = time.time()
     print('测试时间：%s s' % (endTime - startTime))
